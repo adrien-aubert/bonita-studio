@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -45,6 +46,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
 import org.bonitasoft.bpm.model.util.ExpressionConstants;
 import org.bonitasoft.studio.common.NamingUtils;
+import org.bonitasoft.studio.common.Strings;
 import org.bonitasoft.studio.common.emf.tools.ExpressionHelper;
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
 import org.bonitasoft.bpm.connector.model.definition.ConnectorDefinitionFactory;
@@ -56,9 +58,12 @@ import org.bonitasoft.studio.importer.builder.IProcBuilder.EventType;
 import org.bonitasoft.studio.importer.builder.IProcBuilder.GatewayType;
 import org.bonitasoft.studio.importer.builder.IProcBuilder.TaskType;
 import org.bonitasoft.studio.importer.builder.IProcBuilder.TestTimeType;
+import org.bonitasoft.studio.importer.handler.DefaultImportStatusDialogHandler;
+import org.bonitasoft.studio.importer.handler.ImportStatusDialogHandler;
 import org.bonitasoft.studio.importer.builder.ProcBuilder;
 import org.bonitasoft.studio.importer.builder.ProcBuilderException;
 import org.bonitasoft.studio.importer.i18n.Messages;
+import org.bonitasoft.studio.importer.processors.ExportToolInfo;
 import org.bonitasoft.studio.importer.processors.ToProcProcessor;
 import org.bonitasoft.bpm.model.expression.Expression;
 import org.bonitasoft.bpm.model.expression.ExpressionFactory;
@@ -197,6 +202,8 @@ public class BPMNToProc extends ToProcProcessor {
     // private Point posMin;//used in case, no pool shape defined and no
     // participant defined and no laneset defined
 
+    protected ExportToolInfo toolInfo;
+
     private final static String[] tagNameWithQNames = new String[] { "source", "target",
             "sourceRef", "targetRef", "attachedToRef",
             "supportedInterfaceRef", "calledElement",
@@ -298,6 +305,10 @@ public class BPMNToProc extends ToProcProcessor {
             if (docRootDefinitions == null) {
                 throw new Exception("Document type not supported");
             }
+            
+            final String exporterName = docRootDefinitions.getExporter();
+            final String exporterVersion = docRootDefinitions.getExporterVersion();
+            this.toolInfo = Strings.isNullOrEmpty(exporterName) ? null : new ExportToolInfo(exporterName, exporterVersion);            
             final String id = calculateBonitaDiagramId(docRootDefinitions);
             final String name = calculateBonitaDiagramName(docRootDefinitions);
             result = File.createTempFile(id, ".proc");
@@ -308,6 +319,7 @@ public class BPMNToProc extends ToProcProcessor {
             importFromBPMN(docRootDefinitions);
 
             builder.done();
+            BonitaStudioLog.info(String.format("BPMN file imported from \"%s\" version \"%s\"", exporterName, exporterVersion), BPMNToProc.class);
             return result;
         } catch (final Throwable e) {
             BonitaStudioLog.error(e);
@@ -2906,11 +2918,29 @@ public class BPMNToProc extends ToProcProcessor {
     public IProcBuilder getBuilder() {
         return builder;
     }
+    
+    /**
+     * Return an optional containing the information about the tool
+     * that exported the file if specified.
+     * @return The tool information. May be empty.
+     */
+    public Optional<ExportToolInfo> getExporterInformation() {
+        return Optional.ofNullable(this.toolInfo);
+    }
 
     /**
      * @param builder the builder to set
      */
     public void setBuilder(final IProcBuilder builder) {
         this.builder = builder;
+    }
+    
+    @Override
+    public ImportStatusDialogHandler getImportStatusDialogHandler(final IStatus status) {
+        String message = null;
+        if (this.toolInfo != null) {
+            message = Messages.bind(Messages.importBPMNFileSucessfulMessage, this.toolInfo);
+        }
+        return new DefaultImportStatusDialogHandler(status, message, null);
     }
 }

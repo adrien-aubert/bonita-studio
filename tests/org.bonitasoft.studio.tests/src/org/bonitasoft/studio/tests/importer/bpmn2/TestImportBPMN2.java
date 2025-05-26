@@ -16,6 +16,8 @@ package org.bonitasoft.studio.tests.importer.bpmn2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -76,6 +78,7 @@ public class TestImportBPMN2 {
         MainProcess mainProcess = (MainProcess) resource.getContents().get(0);
 
         checkContent(mainProcess, 4, 14, 3, 0, 1, null);
+        assertTrue("Invalid export tool information", bpmnToProc.getExporterInformation().isEmpty());
         resource.unload();
     }
 
@@ -209,6 +212,32 @@ public class TestImportBPMN2 {
                 expectedBoundaryEvents, expectedeventSubprocPool,
                 expectedTextAnnotations, poolName);
         resource.unload();
+    }
+    
+    @Test
+    public void testImportWithExporterToolInformation() throws Exception {
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("withExporterInformation.bpmn"));
+        BPMNToProc bpmnToProc = new BPMNToProc();
+        destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
+        
+        var optToolInfo = bpmnToProc.getExporterInformation();
+        assertTrue("Missing exporter information", optToolInfo.isPresent());
+        var toolInfo = optToolInfo.get();
+        assertEquals("Wrong exporter name", "BonitaSoft", toolInfo.getName());
+        assertEquals("Wrong exporter version", "10.3.0", toolInfo.getVersion());
+    }
+    
+    @Test
+    public void testImportWithExporterToolNameOnly() throws Exception {
+        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("withExporterName.bpmn"));
+        BPMNToProc bpmnToProc = new BPMNToProc();
+        destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
+        
+        var optToolInfo = bpmnToProc.getExporterInformation();
+        assertTrue("Missing exporter information", optToolInfo.isPresent());
+        var toolInfo = optToolInfo.get();
+        assertEquals("Wrong exporter name", "BonitaSoft", toolInfo.getName());
+        assertNull("Wrong exporter version", toolInfo.getVersion());
     }
 
     protected void checkContent(MainProcess mainProcess,
