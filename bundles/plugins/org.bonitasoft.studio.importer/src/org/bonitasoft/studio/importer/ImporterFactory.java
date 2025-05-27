@@ -19,6 +19,7 @@ import java.io.FileInputStream;
 import java.net.URL;
 
 import org.bonitasoft.studio.common.log.BonitaStudioLog;
+import org.bonitasoft.studio.importer.processors.ImportFileOperationListener;
 import org.bonitasoft.studio.importer.processors.ToProcProcessor;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -41,6 +42,10 @@ public abstract class ImporterFactory {
     public abstract boolean appliesTo(String resourceName);
 
     public abstract ToProcProcessor createProcessor(String resourceName);
+
+    public ImportFileOperationListener createListener(String resourceName) {
+        return null;
+    }
 
     public void configure(final IConfigurationElement desc) {
         name = desc.getAttribute("inputName");

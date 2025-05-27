@@ -15,8 +15,6 @@
 package org.bonitasoft.studio.importer.bpmn;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -163,10 +161,7 @@ import org.omg.spec.bpmn.model.TThrowEvent;
 import org.omg.spec.bpmn.model.TTimerEventDefinition;
 import org.omg.spec.bpmn.model.TTransaction;
 import org.omg.spec.bpmn.model.TUserTask;
-import org.omg.spec.dd.dc.Bounds;
-import org.omg.spec.dd.dc.Font;
 import org.omg.spec.dd.di.DiagramElement;
-import org.omg.spec.dd.di.Shape;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -306,9 +301,8 @@ public class BPMNToProc extends ToProcProcessor {
                 throw new Exception("Document type not supported");
             }
             
-            final String exporterName = docRootDefinitions.getExporter();
+            String exporterName = docRootDefinitions.getExporter();
             final String exporterVersion = docRootDefinitions.getExporterVersion();
-            this.toolInfo = Strings.isNullOrEmpty(exporterName) ? null : new ExportToolInfo(exporterName, exporterVersion);            
             final String id = calculateBonitaDiagramId(docRootDefinitions);
             final String name = calculateBonitaDiagramName(docRootDefinitions);
             result = File.createTempFile(id, ".proc");
@@ -319,7 +313,7 @@ public class BPMNToProc extends ToProcProcessor {
             importFromBPMN(docRootDefinitions);
 
             builder.done();
-            BonitaStudioLog.info(String.format("BPMN file imported from \"%s\" version \"%s\"", exporterName, exporterVersion), BPMNToProc.class);
+            this.toolInfo = Strings.isNullOrEmpty(exporterName) ? null : new ExportToolInfo(exporterName, exporterVersion);
             return result;
         } catch (final Throwable e) {
             BonitaStudioLog.error(e);
@@ -2929,6 +2923,14 @@ public class BPMNToProc extends ToProcProcessor {
     }
 
     /**
+     * Sets the name of the tool that exported the file.
+     * @param name
+     */
+    public void setExporterInformation(String name) {
+        this.toolInfo = new ExportToolInfo(name);
+    }
+
+    /**
      * @param builder the builder to set
      */
     public void setBuilder(final IProcBuilder builder) {
@@ -2942,5 +2944,13 @@ public class BPMNToProc extends ToProcProcessor {
             message = Messages.bind(Messages.importBPMNFileSucessfulMessage, this.toolInfo);
         }
         return new DefaultImportStatusDialogHandler(status, message, null);
+    }
+
+
+    /**
+     * Cancel the process to import the file.
+     */
+    public void cancel() {
+        this.status.add(Status.CANCEL_STATUS);
     }
 }

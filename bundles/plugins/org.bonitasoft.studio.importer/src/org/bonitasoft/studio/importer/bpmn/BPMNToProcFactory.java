@@ -15,6 +15,7 @@
 package org.bonitasoft.studio.importer.bpmn;
 
 import org.bonitasoft.studio.importer.ImporterFactory;
+import org.bonitasoft.studio.importer.processors.ImportFileOperationListener;
 import org.bonitasoft.studio.importer.processors.ToProcProcessor;
 
 /**
@@ -39,4 +40,8 @@ public class BPMNToProcFactory extends ImporterFactory {
         return new BPMNToProc();
     }
 
+    @Override
+    public ImportFileOperationListener createListener(String resourceName) {
+        return new BPMNImportFileListener();
+    }
 }

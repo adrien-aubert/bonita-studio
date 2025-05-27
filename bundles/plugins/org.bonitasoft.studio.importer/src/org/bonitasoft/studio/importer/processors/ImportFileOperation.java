@@ -22,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.bonitasoft.studio.common.repository.RepositoryManager;
 import org.bonitasoft.studio.common.repository.model.IRepositoryFileStore;
@@ -48,6 +49,7 @@ public class ImportFileOperation implements IRunnableWithProgress {
     private IStatus status;
     private ToProcProcessor processor;
     private SkippableProgressMonitorJobsDialog progressDialog;
+    private ImportFileOperationListener listener;
 
     public List<DiagramFileStore> getFileStoresToOpen() {
         return fileStoresToOpen;
@@ -55,15 +57,22 @@ public class ImportFileOperation implements IRunnableWithProgress {
 
     public ImportFileOperation(final ImporterFactory importerFactory,
             final File fileToImport) {
-        this.importerFactory = importerFactory;
-        this.fileToImport = fileToImport;
-        fileStoresToOpen = new ArrayList<>();
+        this(importerFactory, fileToImport, null, null);
     }
 
     public ImportFileOperation(final ImporterFactory importerFactory,
             final File fileToImport, final SkippableProgressMonitorJobsDialog progressDialog) {
-        this(importerFactory, fileToImport);
+        this(importerFactory, fileToImport, progressDialog, null);
+    }
+
+    public ImportFileOperation(final ImporterFactory importerFactory,
+            final File fileToImport, final SkippableProgressMonitorJobsDialog progressDialog,
+            final ImportFileOperationListener listener) {
+        this.importerFactory = importerFactory;
+        this.fileToImport = fileToImport;
         this.progressDialog = progressDialog;
+        this.fileStoresToOpen = new ArrayList<>();
+        this.listener = Objects.requireNonNullElse(listener, new NoopImportFileOperationListener());
     }
 
     @Override
@@ -73,8 +82,10 @@ public class ImportFileOperation implements IRunnableWithProgress {
         processor = importerFactory.createProcessor(fileToImport.getName());
         processor.setRepository(RepositoryManager.getInstance().getCurrentRepository().orElseThrow().getProjectId());
         processor.setProgressDialog(progressDialog);
+        this.listener = importerFactory.createListener(fileToImport.getName());
         try {
             processor.createDiagram(fileToImport.toURI().toURL(), monitor);
+            this.listener.diagramCreated(processor);
         } catch (final MalformedURLException e) {
             status = new Status(IStatus.ERROR, ImporterPlugin.PLUGIN_ID, e.getMessage(), e);
             throw new InvocationTargetException(e, e.getMessage());
@@ -82,9 +93,14 @@ public class ImportFileOperation implements IRunnableWithProgress {
             status = new Status(IStatus.ERROR, ImporterPlugin.PLUGIN_ID, e.getMessage(), e);
             throw new InvocationTargetException(e, e.getMessage());
         }
+
         //handleErrors(processor);
-        addFileStoresToOpen(processor);
         status = processor.getStatus();
+
+        if (!status.matches(IStatus.CANCEL)) {
+            addFileStoresToOpen(processor);
+            this.listener.importCompleted(processor);
+        }
     }
 
     protected void addFileStoresToOpen(final ToProcProcessor processor)

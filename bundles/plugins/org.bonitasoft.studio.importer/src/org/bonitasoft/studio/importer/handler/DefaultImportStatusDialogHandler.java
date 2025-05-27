@@ -29,6 +29,7 @@ public class DefaultImportStatusDialogHandler implements ImportStatusDialogHandl
     protected final IStatus importStatus;
     protected Optional<String> customSuccessMessage = Optional.empty();
     protected Optional<String> customErrorMessage = Optional.empty();
+    protected Optional<String> customCancelMessage = Optional.empty();
 
     public DefaultImportStatusDialogHandler(final IStatus importStatus) {
         this.importStatus = importStatus;
@@ -36,9 +37,15 @@ public class DefaultImportStatusDialogHandler implements ImportStatusDialogHandl
 
     public DefaultImportStatusDialogHandler(final IStatus importStatus, String customSuccessMessage,
             String customErrorMessage) {
+        this(importStatus, customSuccessMessage, customErrorMessage, null);
+    }
+
+    public DefaultImportStatusDialogHandler(final IStatus importStatus, String customSuccessMessage,
+            String customErrorMessage, String customCancelMessage) {
         this.importStatus = importStatus;
         this.customSuccessMessage = Optional.ofNullable(customSuccessMessage);
         this.customErrorMessage = Optional.ofNullable(customErrorMessage);
+        this.customCancelMessage = Optional.ofNullable(customCancelMessage);
     }
 
     @Override
@@ -55,6 +62,10 @@ public class DefaultImportStatusDialogHandler implements ImportStatusDialogHandl
                 case IStatus.INFO:
                     return openImportStatus(parentShell, customSuccessMessage
                             .orElse(org.bonitasoft.studio.importer.i18n.Messages.importSucessfulMessage));
+                case IStatus.CANCEL:
+                    final String message = customCancelMessage.orElse(org.bonitasoft.studio.importer.i18n.Messages.importCanceledMessage);
+                    MessageDialog.openInformation(parentShell, org.bonitasoft.studio.importer.i18n.Messages.importResultTitle, message);
+                    return IDialogConstants.CLOSE_ID;
                 default:
                     return openImportStatus(parentShell,
                             customErrorMessage.orElse(org.bonitasoft.studio.importer.i18n.Messages.importStatusMsg));
@@ -65,5 +76,4 @@ public class DefaultImportStatusDialogHandler implements ImportStatusDialogHandl
     protected int openImportStatus(Shell parentShell, String message) {
        return new ImportStatusDialog(parentShell, importStatus, message, false).open();
     }
-
 }

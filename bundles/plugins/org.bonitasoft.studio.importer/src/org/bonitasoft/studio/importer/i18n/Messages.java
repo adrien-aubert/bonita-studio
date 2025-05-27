@@ -40,7 +40,14 @@ public class Messages extends NLS {
     public static String errorWhileImporting_title;
     public static String ImportProcessButtonLabel;
     public static String importButtonLabel;
+    public static String importBPMNFileSelectExporterOtherOption;
+    public static String importBPMNFileSelectExporterLabel;
+    public static String importBPMNFileSelectExporterOtherToolInputLabel;
+    public static String importBPMNFileSelectOriginMessage;
+    public static String importBPMNFileSelectOriginTitle;
     public static String importBPMNFileSucessfulMessage;
+    public static String importBPMNFileInvalidFileMessage;
+    public static String importCanceledMessage;
     public static String importSucessfulMessage;
     public static String importResultTitle;
     public static String importStatusMsg;
