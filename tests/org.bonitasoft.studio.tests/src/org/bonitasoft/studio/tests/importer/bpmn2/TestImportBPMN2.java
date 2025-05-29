@@ -48,12 +48,11 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-
 public class TestImportBPMN2 {
-    
+
     @Rule
     public InitialProjectRule projectRule = InitialProjectRule.INSTANCE;
-    
+
     private File destFile;
 
     protected org.eclipse.emf.common.util.URI toEMFURI(File file) throws MalformedURLException {
@@ -84,7 +83,8 @@ public class TestImportBPMN2 {
 
     @Test
     public void testImportBPMN2WithUnknownDiagramNS() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("standardProcess_badNameSpace.bpmn")); //$NON-NLS-1$
+        URL bpmnResource = FileLocator
+                .toFileURL(TestImportBPMN2.class.getResource("standardProcess_badNameSpace.bpmn")); //$NON-NLS-1$
         BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
 
@@ -205,7 +205,8 @@ public class TestImportBPMN2 {
         final int expectedEvents = 15;
         final int expectedBoundaryEvents = 3;
         final int expectedeventSubprocPool = 0;
-        final int expectedTextAnnotations = 1;//TODO: it should be two but we can' timport text annotation attached to a sequenceflow
+        final int expectedTextAnnotations = 1;// TODO: it should be two but we can' timport text annotation attached to
+                                              // a sequenceflow
         final String poolName = "pool complex";
 
         checkContent(mainProcess, expectedPools, expectedEvents,
@@ -213,26 +214,28 @@ public class TestImportBPMN2 {
                 expectedTextAnnotations, poolName);
         resource.unload();
     }
-    
+
     @Test
     public void testImportWithExporterToolInformation() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("withExporterInformation.bpmn"));
+        URL bpmnResource = FileLocator
+                .toFileURL(TestImportBPMN2.class.getResource("bpmn2samples/withExporterInformation.bpmn"));
         BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
-        
+
         var optToolInfo = bpmnToProc.getExporterInformation();
         assertTrue("Missing exporter information", optToolInfo.isPresent());
         var toolInfo = optToolInfo.get();
         assertEquals("Wrong exporter name", "BonitaSoft", toolInfo.getName());
         assertEquals("Wrong exporter version", "10.3.0", toolInfo.getVersion());
     }
-    
+
     @Test
     public void testImportWithExporterToolNameOnly() throws Exception {
-        URL bpmnResource = FileLocator.toFileURL(TestImportBPMN2.class.getResource("withExporterName.bpmn"));
+        URL bpmnResource = FileLocator
+                .toFileURL(TestImportBPMN2.class.getResource("bpmn2samples/withExporterName.bpmn"));
         BPMNToProc bpmnToProc = new BPMNToProc();
         destFile = bpmnToProc.createDiagram(bpmnResource, new NullProgressMonitor());
-        
+
         var optToolInfo = bpmnToProc.getExporterInformation();
         assertTrue("Missing exporter information", optToolInfo.isPresent());
         var toolInfo = optToolInfo.get();
